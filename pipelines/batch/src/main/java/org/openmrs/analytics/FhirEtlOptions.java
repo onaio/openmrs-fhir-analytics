@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package org.openmrs.analytics;
 
 import org.apache.beam.sdk.options.Default;
@@ -163,4 +164,49 @@ public interface FhirEtlOptions extends PipelineOptions {
 	String getActivePeriod();
 	
 	void setActivePeriod(String value);
+	
+	/*
+	 * OAuth settings
+	 */
+	@Description("ClientId of the source")
+	@Default.String("")
+	String getSourceClientId();
+	
+	void setSourceClientId(String value);
+	
+	@Description("ClientSecret of the source")
+	@Default.String("")
+	String getSourceClientSecret();
+	
+	void setSourceClientSecret(String value);
+	
+	@Description("Access token url of the source")
+	@Default.String("")
+	String getSourceAccessTokenUrl();
+	
+	void setSourceAccessTokenUrl(String value);
+	
+	@Description("Username of the source")
+	@Default.String("")
+	String getSourceUsername();
+	
+	void setSourceUsername(String value);
+	
+	@Description("Password of the source")
+	@Default.String("")
+	String getSourcePassword();
+	
+	void setSourcePassword(String value);
+	
+	@Description("Scope of the source")
+	@Default.String("profile")
+	String getSourceScope();
+	
+	void setSourceScope(String value);
+	
+	@Description("Flag to switch to OAuth")
+	@Default.Boolean(false)
+	Boolean isOAuthEnabled();
+	
+	void setOAuthEnabled(Boolean value);
 }
