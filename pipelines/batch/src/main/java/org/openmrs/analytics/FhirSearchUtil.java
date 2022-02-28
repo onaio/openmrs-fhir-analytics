@@ -45,9 +45,6 @@ public class FhirSearchUtil {
 	
 	FhirSearchUtil(OpenmrsUtil openmrsUtil) {
 		this.openmrsUtil = openmrsUtil;
-		// Check if null
-		System.out.println("----------------------------------------- get access token");
-		// System.out.println(this.openmrsUtil.tokenResponse.getAccessToken());
 	}
 	
 	public Bundle searchByUrl(String searchUrl, int count, SummaryEnum summaryMode) {
