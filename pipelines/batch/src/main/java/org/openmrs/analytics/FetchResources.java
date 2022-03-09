@@ -67,9 +67,11 @@ public class FetchResources extends PTransform<PCollection<SearchSegmentDescript
 				// TODO: Find a more generic way to check if this is a reference to a Patient. With the
 				// current OpenMRS setup, reference.getType() is null so we cannot rely on that.
 				String refStr = reference.getReference();
-				Matcher matcher = PATIENT_REFERENCE.matcher(refStr);
-				if (matcher.matches()) {
-					patientId = matcher.group(1);
+				if (refStr != null) {
+					Matcher matcher = PATIENT_REFERENCE.matcher(refStr);
+					if (matcher.matches()) {
+						patientId = matcher.group(1);
+					}
 				}
 				if (patientId == null) {
 					log.warn(String.format("Ignoring subject of %s with id %s because it is not a Patient reference: %s",
