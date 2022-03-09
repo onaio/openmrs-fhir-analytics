@@ -209,4 +209,9 @@ public interface FhirEtlOptions extends PipelineOptions {
 	Boolean isOAuthEnabled();
 	
 	void setOAuthEnabled(Boolean value);
+	
+	@Description("The lastUpdated date for a particular resourceType")
+	String getLastUpdated();
+	
+	void setLastUpdated(String value);
 }

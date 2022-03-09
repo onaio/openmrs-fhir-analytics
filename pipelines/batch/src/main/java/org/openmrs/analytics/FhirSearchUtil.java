@@ -138,6 +138,19 @@ public class FhirSearchUtil {
 				log.info(String.format("Fetching all %s resources after %s", resourceType, dateRange.get(0)));
 			}
 		}
+
+		if (!options.getLastUpdated().isEmpty()) {
+			List<String> dateRange = getDateRange(options.getLastUpdated());
+			searchQuery = searchQuery.where(new DateClientParam("_lastUpdated").after().second(dateRange.get(0)));
+			if (dateRange.size() > 1) {
+				searchQuery = searchQuery
+				        .where(new DateClientParam("_lastUpdated").beforeOrEquals().second(dateRange.get(1)));
+				log.info(String.format("Fetching all %s resources after %s and beforeOrEqual %s", resourceType,
+				    dateRange.get(0), dateRange.get(1)));
+			} else {
+				log.info(String.format("Fetching all %s resources after %s", resourceType, dateRange.get(0)));
+			}
+		}
 		return searchQuery;
 	}
 	
