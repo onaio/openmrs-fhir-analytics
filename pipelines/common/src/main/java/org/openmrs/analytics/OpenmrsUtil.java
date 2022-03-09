@@ -14,11 +14,22 @@
 
 package org.openmrs.analytics;
 
+import java.io.IOException;
+import java.util.Collections;
+
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
+import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
+import com.google.api.client.auth.oauth2.ClientParametersAuthentication;
+import com.google.api.client.auth.oauth2.PasswordTokenRequest;
+import com.google.api.client.auth.oauth2.TokenResponse;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
@@ -36,12 +47,53 @@ public class OpenmrsUtil {
 	
 	private final FhirContext fhirContext;
 	
-	OpenmrsUtil(String sourceFhirUrl, String sourceUser, String sourcePw, FhirContext fhirContext)
-	        throws IllegalArgumentException {
+	private final String sourceClientId;
+	
+	private final String sourceClientSecret;
+	
+	private final String sourceAccessTokenUrl;
+	
+	private final String sourceScope;
+	
+	private final Boolean oAuthEnabled;
+	
+	private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+	
+	private static final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+	
+	protected transient TokenResponse tokenResponse = null;
+	
+	IClientInterceptor authInterceptor = null;
+	
+	IGenericClient client;
+	
+	public OpenmrsUtil(String sourceFhirUrl, String sourceUser, String sourcePw, FhirContext fhirContext) {
 		this.fhirUrl = sourceFhirUrl;
 		this.sourceUser = sourceUser;
 		this.sourcePw = sourcePw;
 		this.fhirContext = fhirContext;
+		this.sourceClientId = null;
+		this.sourceClientSecret = null;
+		this.sourceAccessTokenUrl = null;
+		this.sourceScope = null;
+		this.oAuthEnabled = false;
+		this.client = getSourceClient();
+		
+	}
+	
+	public OpenmrsUtil(String openMrsServerUrl, String sourceUsername, String sourcePassword, FhirContext fhirContext,
+	    String sourceClientId, String sourceClientSecret, String sourceAccessTokenUrl, String sourceScope,
+	    Boolean oAuthEnabled) {
+		this.fhirUrl = openMrsServerUrl;
+		this.sourceUser = sourceUsername;
+		this.sourcePw = sourcePassword;
+		this.fhirContext = fhirContext;
+		this.sourceClientId = sourceClientId;
+		this.sourceClientSecret = sourceClientSecret;
+		this.sourceAccessTokenUrl = sourceAccessTokenUrl;
+		this.sourceScope = sourceScope;
+		this.oAuthEnabled = oAuthEnabled;
+		this.client = getSourceClient();
 	}
 	
 	public Resource fetchFhirResource(String resourceType, String resourceId) {
@@ -71,7 +123,22 @@ public class OpenmrsUtil {
 	}
 	
 	public IGenericClient getSourceClient(boolean enableRequestLogging) {
-		IClientInterceptor authInterceptor = new BasicAuthInterceptor(this.sourceUser, this.sourcePw);
+		if (oAuthEnabled) {
+			try {
+				PasswordTokenRequest tokenRequest = new PasswordTokenRequest(HTTP_TRANSPORT, JSON_FACTORY,
+				        new GenericUrl(sourceAccessTokenUrl), sourceUser, sourcePw).setGrantType("password")
+				                .setScopes(Collections.singleton(sourceScope)).setClientAuthentication(
+				                    new ClientParametersAuthentication(sourceClientId, sourceClientSecret));
+				tokenResponse = tokenRequest.execute();
+				authInterceptor = new BearerTokenAuthInterceptor(tokenResponse.getAccessToken());
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			authInterceptor = new BasicAuthInterceptor(this.sourceUser, this.sourcePw);
+		}
+		
 		fhirContext.getRestfulClientFactory().setSocketTimeout(200 * 1000);
 		
 		IGenericClient client = fhirContext.getRestfulClientFactory().newGenericClient(this.fhirUrl);

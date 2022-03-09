@@ -68,6 +68,11 @@ public class FhirEtl {
 	}
 	
 	static OpenmrsUtil createOpenmrsUtil(FhirEtlOptions options, FhirContext fhirContext) {
+		if (options.isOAuthEnabled()) {
+			return new OpenmrsUtil(options.getOpenmrsServerUrl(), options.getSourceUsername(), options.getSourcePassword(),
+			        fhirContext, options.getSourceClientId(), options.getSourceClientSecret(),
+			        options.getSourceAccessTokenUrl(), options.getSourceScope(), options.isOAuthEnabled());
+		}
 		return new OpenmrsUtil(options.getOpenmrsServerUrl() + options.getOpenmrsFhirBaseEndpoint(),
 		        options.getOpenmrsUserName(), options.getOpenmrsPassword(), fhirContext);
 	}

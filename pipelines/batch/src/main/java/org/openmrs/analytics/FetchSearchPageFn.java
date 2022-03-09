@@ -57,6 +57,20 @@ abstract class FetchSearchPageFn<T> extends DoFn<T, KV<String, Integer>> {
 	
 	private final String sinkPassword;
 	
+	private final Boolean oAuthEnabled;
+	
+	private final String sourceUsername;
+	
+	private final String sourcePassword;
+	
+	private final String clientId;
+	
+	private final String clientSecret;
+	
+	private final String accessTokenUrl;
+	
+	private final String scope;
+	
 	protected final String stageIdentifier;
 	
 	private final String parquetFile;
@@ -83,6 +97,13 @@ abstract class FetchSearchPageFn<T> extends DoFn<T, KV<String, Integer>> {
 		this.sourceUrl = options.getOpenmrsServerUrl() + options.getOpenmrsFhirBaseEndpoint();
 		this.sourceUser = options.getOpenmrsUserName();
 		this.sourcePw = options.getOpenmrsPassword();
+		this.oAuthEnabled = options.isOAuthEnabled();
+		this.sourceUsername = options.getSourceUsername();
+		this.sourcePassword = options.getSourcePassword();
+		this.clientId = options.getSourceClientId();
+		this.clientSecret = options.getSourceClientSecret();
+		this.accessTokenUrl = options.getSourceAccessTokenUrl();
+		this.scope = options.getSourceScope();
 		this.stageIdentifier = stageIdentifier;
 		this.parquetFile = options.getOutputParquetPath();
 		this.secondsToFlush = options.getSecondsToFlushParquetFiles();
@@ -99,7 +120,12 @@ abstract class FetchSearchPageFn<T> extends DoFn<T, KV<String, Integer>> {
 		FhirContext fhirContext = FhirContext.forR4();
 		fhirStoreUtil = FhirStoreUtil.createFhirStoreUtil(sinkPath, sinkUsername, sinkPassword,
 		    fhirContext.getRestfulClientFactory());
-		openmrsUtil = new OpenmrsUtil(sourceUrl, sourceUser, sourcePw, fhirContext);
+		if (oAuthEnabled) {
+			openmrsUtil = new OpenmrsUtil(sourceUrl, sourceUsername, sourcePassword, fhirContext, clientId, clientSecret,
+			        accessTokenUrl, scope, true);
+		} else {
+			openmrsUtil = new OpenmrsUtil(sourceUrl, sourceUser, sourcePw, fhirContext);
+		}
 		fhirSearchUtil = new FhirSearchUtil(openmrsUtil);
 		parquetUtil = new ParquetUtil(parquetFile, secondsToFlush, rowGroupSize, stageIdentifier + "_");
 		parser = fhirContext.newJsonParser();
