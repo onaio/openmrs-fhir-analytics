@@ -65,8 +65,6 @@ public class OpenmrsUtil {
 	
 	IClientInterceptor authInterceptor = null;
 	
-	IGenericClient client;
-	
 	public OpenmrsUtil(String sourceFhirUrl, String sourceUser, String sourcePw, FhirContext fhirContext) {
 		this.fhirUrl = sourceFhirUrl;
 		this.sourceUser = sourceUser;
@@ -77,7 +75,6 @@ public class OpenmrsUtil {
 		this.sourceAccessTokenUrl = null;
 		this.sourceScope = null;
 		this.oAuthEnabled = false;
-		this.client = getSourceClient();
 		
 	}
 	
@@ -93,7 +90,6 @@ public class OpenmrsUtil {
 		this.sourceAccessTokenUrl = sourceAccessTokenUrl;
 		this.sourceScope = sourceScope;
 		this.oAuthEnabled = oAuthEnabled;
-		this.client = getSourceClient();
 	}
 	
 	public Resource fetchFhirResource(String resourceType, String resourceId) {
