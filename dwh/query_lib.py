@@ -331,25 +331,21 @@ class _SparkPatientQuery(PatientQuery):
       # Loading Parquet files and flattening only happens once.
       self._patient_df = self._spark.read.parquet(self._file_root + '/Patient')
       # TODO create inspection functions
-      common.custom_log(
-          'Number of Patient resources= {}'.format(self._patient_df.count()))
+      print("Number of Patient resources= %s" % self._patient_df.count())
 
   def _make_sure_obs(self):
     if not self._obs_df:
       self._obs_df = self._spark.read.parquet(self._file_root + '/Observation')
-      common.custom_log(
-          'Number of Observation resources= {}'.format(self._obs_df.count()))
+      print("Number of Observation resources= %s" % self._obs_df.count())
     if not self._flat_obs:
       self._flat_obs = _SparkPatientQuery._flatten_obs(
           self._obs_df, self._code_system)
-      common.custom_log(
-          'Number of flattened obs rows = {}'.format(self._flat_obs.count()))
+      print("Number of flattened obs rows= %s" % self._flat_obs.count())
 
   def _make_sure_encounter(self):
     if not self._enc_df:
       self._enc_df = self._spark.read.parquet(self._file_root + '/Encounter')
-      common.custom_log(
-          'Number of Encounter resources= {}'.format(self._enc_df.count()))
+      print("Number of Encounter resources= %s" % self._enc_df.count())
 
   def get_patient_obs_view(self, base_url: str) -> pandas.DataFrame:
     """See super-class doc."""
@@ -366,17 +362,15 @@ class _SparkPatientQuery(PatientQuery):
         flat_enc, flat_enc.encounterId == self._flat_obs.encounterId).where(
         self.all_constraints_sql())
     agg_obs_df = _SparkPatientQuery._aggregate_patient_codes(join_df)
-    common.custom_log(
-      'Number of aggregated obs= {}'.format(agg_obs_df.count()))
+    print("Number of aggregated obs= %s" % agg_obs_df.count())
     self._patient_agg_obs_df = _SparkPatientQuery._join_patients_agg_obs(
         self._patient_df, agg_obs_df, base_patient_url)
-    common.custom_log('Number of joined patient_agg_obs= {}'.format(
-        self._patient_agg_obs_df.count()))
+    print("Number of joined patient_agg_obs= %s" % self._patient_agg_obs_df.count())
     # Spark is supposed to automatically cache DFs after shuffle but it seems
     # this is not happening!
     self._patient_agg_obs_df.cache()
     temp_pd_df = self._patient_agg_obs_df.toPandas()
-    common.custom_log('patient_obs_view size= {}'.format(temp_pd_df.index.size))
+    print("patient_obs_view size= %s" % temp_pd_df.index.size)
     temp_pd_df['last_value'] = temp_pd_df.max_date_value.str.split(
         DATE_VALUE_SEPARATOR, expand=True)[1]
     temp_pd_df['first_value'] = temp_pd_df.min_date_value.str.split(
